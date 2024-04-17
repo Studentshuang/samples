@@ -13,10 +13,10 @@ COPY go.sum go.sum
 RUN go env -w GOPROXY="https://goproxy.cn,direct" && go mod download
 
 # Copy the go source
-COPY main.go main.go
+COPY hello.go hello.go
 
 # Build
-RUN GOPROXY="https://goproxy.cn,direct" CGO_ENABLED=0 GOOS=linux GOARCH=arm64 GO111MODULE=on go build -a -o hello main.go
+RUN GOPROXY="https://goproxy.cn,direct" CGO_ENABLED=0 GOOS=linux GOARCH=arm64 GO111MODULE=on go build -a -o hello hello.go
 
 #FROM openfunction/distroless-static:nonroot
 FROM gcr.io/distroless/static-debian11:nonroot-arm64
