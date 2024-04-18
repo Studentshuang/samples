@@ -1,8 +1,4 @@
-ARG GOPROXY="https://goproxy.cn,direct"
-
-# Build the openfunction binary
-FROM golang:1.19 as builder
-ARG GOPROXY
+FROM golang:1.16 AS build
 
 WORKDIR /workspace
 # Copy the Go Modules manifests
@@ -13,15 +9,18 @@ COPY go.sum go.sum
 RUN go env -w GOPROXY="https://goproxy.cn,direct" && go mod download 
 RUN go mod download github.com/OpenFunction/functions-framework-go
 RUN go get github.com/OpenFunction/functions-framework-go/context@v0.5.0
+RUN go mod tidy
 
 # Copy the go source
 COPY hello.go hello.go
+ENV CGO_ENABLED=0
+RUN GOPROXY="https://goproxy.cn,direct" CGO_ENABLED=0 GOOS=linux GOARCH=arm64 GO111MODULE=on go build \
+    -tags netgo \
+    -ldflags "-s -w -extldflags '-static'" \
+    -o hellow \
+    hello.go
 
-# Build
-RUN GOPROXY="https://goproxy.cn,direct" CGO_ENABLED=0 GOOS=linux GOARCH=arm64 GO111MODULE=on go build -a -o hello hello.go
-
-#FROM openfunction/distroless-static:nonroot
-FROM gcr.io/distroless/static-debian11:nonroot-arm64
+FROM scratch
 WORKDIR /
 COPY --from=builder /workspace/hello ./
 USER 65532:65532
